@@ -1,0 +1,44 @@
+name: 'PR Validation'
+
+# Run this workflow when a pull request is opened or edited
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  validate-pr-info:
+    name: 'Validate PR Branch and Title'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Check Branch Name'
+        run: |
+          # This is the name of the branch the PR is coming from
+          BRANCH_NAME="${{ github.head_ref }}"
+          
+          # This is the pattern we require. You can customize it.
+          # It looks for feature/, bugfix/, or hotfix/ followed by SIRE-123-description
+          REGEX="^(feature|bugfix|hotfix)\/SIRE-[0-9]+-.*$"
+          
+          if [[ $BRANCH_NAME =~ $REGEX ]]; then
+            echo "Branch name '$BRANCH_NAME' is valid."
+          else
+            echo "❌ Branch name '$BRANCH_NAME' is not valid."
+            echo "Please name your branch like: 'feature/SIRE-123-a-short-description'"
+            exit 1
+          fi
+
+      - name: 'Check PR Title'
+        run: |
+          # This is the title of the pull request
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # This pattern checks that the title starts with SIRE-123:
+          REGEX="^SIRE-[0-9]+: .+$"
+
+          if [[ $PR_TITLE =~ $REGEX ]]; then
+            echo "PR Title is valid."
+          else
+            echo "❌ PR Title '$PR_TITLE' is not valid."
+            echo "Please format your PR title like: 'SIRE-123: A brief description'"
+            exit 1
+          fi
